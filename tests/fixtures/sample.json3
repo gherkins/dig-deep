@@ -1,0 +1,7 @@
+{"events":[
+  {"tStartMs":0,"dDurationMs":1800,"segs":[{"utf8":"Hello world"}]},
+  {"tStartMs":2000,"segs":[{"utf8":"\n"}]},
+  {"tStartMs":65000,"segs":[{"utf8":"second "},{"utf8":"line"}]},
+  {"wsWinId":0},
+  {"tStartMs":3661000,"segs":[{"utf8":"late segment"}]}
+]}
