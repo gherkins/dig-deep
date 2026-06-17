@@ -28,8 +28,10 @@ dependencies = []
 extract = ["trafilatura>=1.6"]
 # Headless-browser fallback for JS-heavy / bot-blocked pages.
 browser = ["playwright>=1.40"]
+# Structured glossary-subgraph traversal in the wiki lane (else substring fallback).
+wiki = ["PyYAML>=5.1"]
 # Everything optional, for the full experience.
-all = ["trafilatura>=1.6", "playwright>=1.40"]
+all = ["trafilatura>=1.6", "playwright>=1.40", "PyYAML>=5.1"]
 
 [project.urls]
 Homepage = "https://github.com/gherkins/dig-deep"

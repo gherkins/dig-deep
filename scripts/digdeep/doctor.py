@@ -37,6 +37,7 @@ def check():
         ("yt-dlp", _has_cmd("yt-dlp"), True, "pip install yt-dlp   (youtube + playlist lanes)"),
         ("trafilatura", _has_module("trafilatura"), False, "pip install 'digdeep[extract]'   (better web extraction)"),
         ("playwright", _has_module("playwright"), False, "pip install 'digdeep[browser]'   (browser fallback)"),
+        ("PyYAML", _has_module("yaml"), False, "pip install 'digdeep[wiki]'   (structured wiki glossary traversal)"),
     ]
     if _has_module("playwright"):
         rows.append(("chromium", _has_chromium(), False, "playwright install chromium   (browser fallback)"))

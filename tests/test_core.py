@@ -38,3 +38,31 @@ def test_looks_blocked():
     assert render.looks_blocked("", 200) is True            # sparse
     assert render.looks_blocked("x" * 600, 403) is True     # error status
     assert render.looks_blocked("x" * 600, 200) is False    # fine
+
+
+def test_normalize_url_strips_tracking_and_fragment():
+    base = merge.normalize_url("https://example.com/post")
+    assert merge.normalize_url("https://example.com/post?utm_source=tw&utm_medium=x") == base
+    assert merge.normalize_url("https://example.com/post#section") == base
+    assert merge.normalize_url("https://example.com/post?fbclid=123&ref=hn") == base
+
+
+def test_normalize_url_keeps_meaningful_query_distinct():
+    # distinct ?v= must NOT collapse together (the over-merge guard)
+    assert merge.normalize_url("https://youtube.com/watch?v=AAA") != \
+        merge.normalize_url("https://youtube.com/watch?v=BBB")
+    # param order doesn't matter (sorted key)
+    assert merge.normalize_url("https://e.com/x?a=1&b=2") == merge.normalize_url("https://e.com/x?b=2&a=1")
+
+
+def test_budget_classify_minutes():
+    assert budgets.classify_minutes(5).name == "quick"
+    assert budgets.classify_minutes(6).name == "quick"
+    assert budgets.classify_minutes(7).name == "standard"
+    assert budgets.classify_minutes(14).name == "standard"
+    assert budgets.classify_minutes(15).name == "deep"
+    assert budgets.classify_minutes("not a number").name == "deep"   # fallback
+
+
+def test_standard_soft_minutes_reconciled():
+    assert budgets.get_profile("standard").soft_minutes == 10

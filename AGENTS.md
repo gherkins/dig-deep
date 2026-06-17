@@ -117,6 +117,11 @@ under `.claude/wiki/`. See [`docs/wiki-SCHEMA.md`](docs/wiki-SCHEMA.md). (The
 `digdeep` CLI is read-only by design; writeback is something your orchestrator
 does directly, so it stays a deliberate, gated step.)
 
+First, **guard the format**: only write the dig-deep schema into a `.claude/wiki/`
+that is absent or already schema-shaped (has a `SCHEMA.md`, or a `glossary/` or `pages/` dir). If
+an existing wiki is foreign — Phase 0 returned `foreign_wiki: true` — skip
+writeback rather than scaffolding the schema on top of someone else's wiki.
+
 ---
 
 ## Research budgets

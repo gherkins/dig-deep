@@ -29,7 +29,7 @@ PROFILES = {
         blurb="Fast skim — web sweep plus at most one extra lane, single round.",
     ),
     "standard": Profile(
-        name="standard", soft_minutes=12, extra_lanes=2, rounds_per_lane=2,
+        name="standard", soft_minutes=10, extra_lanes=2, rounds_per_lane=2,
         search_breadth=6, fetch_breadth=10,
         blurb="Balanced dig — web sweep plus up to two lanes, a follow-up round each.",
     ),
@@ -61,3 +61,19 @@ def classify(question: str) -> Profile:
         if any(h in low for h in _HINTS[key]):
             return PROFILES[key]
     return PROFILES[DEFAULT_PROFILE]
+
+
+def classify_minutes(n) -> Profile:
+    """Map an explicit minute budget to a profile. Boundaries track ``soft_minutes``
+    (quick=5, standard=10): ``n<=6`` quick, ``7..14`` standard, ``>=15`` deep.
+    Non-numeric input falls back to the default profile.
+    """
+    try:
+        n = int(n)
+    except (TypeError, ValueError):
+        return PROFILES[DEFAULT_PROFILE]
+    if n <= 6:
+        return PROFILES["quick"]
+    if n <= 14:
+        return PROFILES["standard"]
+    return PROFILES["deep"]

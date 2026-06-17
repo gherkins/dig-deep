@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from digdeep.http import HttpResult
 from digdeep.lanes import papers, playlist, reddit, wiki, youtube
 
@@ -64,3 +66,51 @@ def test_wiki_lookup(tmp_path):
 
 def test_wiki_no_wiki(tmp_path):
     assert wiki.lookup("anything", wiki_root=str(tmp_path / "nope"))["no_wiki"] is True
+
+
+def test_papers_s2_paper_id_normalizes():
+    assert papers._s2_paper_id("1706.03762") == "ArXiv:1706.03762"        # bare arXiv → typed
+    assert papers._s2_paper_id("10.1145/3292500") == "DOI:10.1145/3292500"  # bare DOI → typed
+    assert papers._s2_paper_id("ArXiv:1706.03762") == "ArXiv:1706.03762"  # already typed: pass through
+    assert papers._s2_paper_id("CorpusId:12345") == "CorpusId:12345"      # already typed: pass through
+    sha = "0" * 40
+    assert papers._s2_paper_id(sha) == sha                                 # S2 paperId: pass through
+
+
+def test_wiki_foreign_format_handoff(tmp_path):
+    # index.md + a single glossary.md, but no glossary/ dir, pages/ dir, or SCHEMA.md
+    root = tmp_path / ".claude" / "wiki"
+    root.mkdir(parents=True)
+    (root / "index.md").write_text("# Hand-authored wiki\n")
+    (root / "glossary.md").write_text("# Glossary\nterm: a definition\n")
+    res = wiki.lookup("anything at all", wiki_root=str(root))
+    assert res["no_wiki"] is True
+    assert res.get("foreign_wiki") is True
+    assert res.get("readable_directly") is True
+
+
+def test_wiki_glossary_subgraph(tmp_path):
+    pytest.importorskip("yaml")   # structured traversal needs the [wiki] extra
+    root = tmp_path / ".claude" / "wiki"
+    (root / "glossary").mkdir(parents=True)
+    (root / "pages" / "llm").mkdir(parents=True)
+    (root / "SCHEMA.md").write_text("schema\n")
+    (root / "index.md").write_text("#llm — [quant](pages/llm/quant.md) — gguf\n")
+    (root / "glossary" / "_aliases.yaml").write_text("exl2: llm\n")
+    (root / "glossary" / "llm.yaml").write_text(
+        "gguf:\n"
+        "  definition: A container for quantized weights.\n"
+        "  domain: llm\n"
+        "  aliases: [GGUF]\n"
+        "  related: [exl2]\n"
+        "  pages: [pages/llm/quant.md]\n"
+        "exl2:\n"
+        "  definition: ExLlamaV2 weight format.\n"
+        "  domain: llm\n"
+        "  aliases: [ExLlamaV2]\n"
+        "  related: []\n"
+        "  pages: []\n")
+    res = wiki.lookup("tell me about gguf", wiki_root=str(root))
+    via = {g["term"]: g["via"] for g in res["glossary"]}
+    assert via.get("gguf") == "direct"        # direct term match
+    assert via.get("exl2") == "related"       # pulled in via the related: edge

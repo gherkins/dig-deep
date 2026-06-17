@@ -174,6 +174,25 @@ def _is_arxiv(pid):
     return bool(_ARXIV_RE.match(pid))
 
 
+def _s2_paper_id(pid):
+    """Normalize an id to a form Semantic Scholar's /paper/ endpoints accept.
+
+    S2 needs a typed id (``ArXiv:<id>``, ``DOI:<doi>``, ``CorpusId:<n>``, …) or a
+    40-char paperId. `search`/`graph` emit bare arXiv ids and DOIs, so prefix
+    those; pass through anything already typed or an S2 paperId.
+    """
+    pid = (pid or "").strip()
+    if not pid:
+        return pid
+    if ":" in pid and not pid.startswith("10."):   # already typed (ArXiv:, DOI:, CorpusId:, …)
+        return pid
+    if _is_arxiv(pid):
+        return "ArXiv:" + pid
+    if pid.startswith("10.") or "/" in pid:        # looks like a DOI
+        return "DOI:" + pid
+    return pid                                     # assume an S2 paperId
+
+
 def _s2_detail(pid):
     fields = "title,abstract,year,citationCount,referenceCount,authors,openAccessPdf,tldr"
     data, _ = http.get_json("%s/paper/%s?fields=%s" % (S2_BASE, urllib.parse.quote(pid, safe=":/"), fields))
@@ -212,7 +231,7 @@ def read(paper_id):
 # ---------------------------------------------------------------- citation graph
 def graph(paper_id, direction="citations", limit=25):
     """direction: 'citations' | 'references' | 'related'. Returns ranked Paper list."""
-    pid = urllib.parse.quote(paper_id.strip(), safe=":/")
+    pid = urllib.parse.quote(_s2_paper_id(paper_id), safe=":/")
     fields = "title,year,citationCount,authors,abstract"
     if direction == "related":
         data, _ = http.get_json(

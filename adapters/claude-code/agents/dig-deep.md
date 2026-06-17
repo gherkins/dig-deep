@@ -127,9 +127,19 @@ specific question.
 
 ### Phase 4.5 — Wiki writeback (gated — ask first)
 
-Skip when no wiki root is in scope, on Quick, or when a cap elapsed. Otherwise
-use `AskUserQuestion` to confirm before writing (summarize planned page touches +
-glossary deltas; offer Yes / No / Dry-run). On approval, write under
+Skip when no wiki root is in scope, on Quick, or when a cap elapsed.
+
+**Writeback guard:** before proposing a write, check the format of any existing
+`.claude/wiki/`. Treat it as a dig-deep wiki only if it has a `SCHEMA.md`, a
+`glossary/` dir, or a `pages/` dir (the same test the `wiki` lane uses — a
+`foreign_wiki: true` from
+Phase 0 is the signal it is **not**). If a `.claude/wiki/` exists but is foreign
+(hand-authored / another tool's, e.g. a flat `glossary.md`), **skip writeback** —
+do not scaffold the schema alongside it — and note the skip in "How we got here".
+Bootstrap the schema only when the dir is absent or already schema-shaped.
+
+Otherwise use `AskUserQuestion` to confirm before writing (summarize planned page
+touches + glossary deltas; offer Yes / No / Dry-run). On approval, write under
 `<root>/.claude/wiki/` per `docs/wiki-SCHEMA.md` (pages, glossary, index, log).
 `Write`/`Edit` are restricted to that directory.
 
